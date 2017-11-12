@@ -1,0 +1,33 @@
+FROM centos:7
+
+MAINTAINER taicsuzu@yahoo-corp.jp
+
+RUN yum update -y && \
+    yum install -y java-1.8.0-openjdk-devel mesa-libGL pulseaudio-libs \
+    wget expect curl unzip git which file lsof && \
+    yum clean all
+
+ENV JAVA_HOME /usr/lib/jvm/java-1.8.0-openjdk
+ENV ANDROID_HOME /opt/android-sdk-linux
+
+# See: https://developer.android.com/studio/index.htm
+ENV ANDROID_SDK_ZIP_FILE sdk-tools-linux-3859397.zip
+
+RUN mkdir -p ${ANDROID_HOME} && \
+    cd ${ANDROID_HOME} && \
+    curl -L -O https://dl.google.com/android/repository/${ANDROID_SDK_ZIP_FILE} && \
+    unzip ${ANDROID_SDK_ZIP_FILE} && \
+    chmod -R 775 ${ANDROID_HOME} && \
+    rm -f ${ANDROID_HOME}/${ANDROID_SDK_ZIP_FILE}
+
+ENV PATH ${PATH}:${ANDROID_HOME}/tools/bin
+ENV PATH ${PATH}:${ANDROID_HOME}/platform-tools
+ENV PATH ${PATH}:${ANDROID_HOME}/emulator
+ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${ANDROID_HOME}/emulator/lib64
+ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${ANDROID_HOME}/emulator/lib64/qt/lib
+
+ADD package_file /tmp/package_file
+ADD ./tools/expectable-sdkmanager /usr/local/bin/expectable-sdkmanager
+
+RUN expectable-sdkmanager --package_file=/tmp/package_file --sdk_root=$ANDROID_HOME
+# avdmanager create avd --name test --abi google_apis/arm64-v8a --package "system-images;android-25;google_apis;arm64-v8a"

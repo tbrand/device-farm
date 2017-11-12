@@ -1,0 +1,15 @@
+#!/usr/bin/expect -f
+
+set timeout 3600
+eval spawn sdkmanager $argv
+
+expect {
+    "Accept? (y/N):" {
+        send "y\n"
+        exp_continue
+    }
+    eof {
+        set status [lindex [wait] 3]
+        exit $status
+    }
+}
